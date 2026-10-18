@@ -163,7 +163,7 @@ def main():
                 if beam.rct.colliderect(bomb.rct):
                     beam = None
                     bomb = None
-                    bird.change_img(6, screen) 
+                    bird.change_img(6, screen)  # 練習３：ここで喜びを表示
                     pg.display.update()
 
         if bomb is not None:
