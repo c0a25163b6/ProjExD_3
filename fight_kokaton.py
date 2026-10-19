@@ -128,7 +128,7 @@ class Bomb:
         rad = 10 + (phase - 1) * 2
         r = max(255 - (phase -1) * 40, 100)
         g = 0
-        b = min((phase - 1) * 40, 255)
+        b = min((phase - 1) * 25, 255)
         color = (r, g, b)
 
         self.img = pg.Surface((2*rad, 2*rad))
@@ -233,6 +233,8 @@ def main():
     beams = []
     # 追加機能3：爆発用のリスト
     exps = []
+    # 追加機能5：フェーズ
+    phase = 1
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -266,20 +268,21 @@ def main():
                                 bombs[idx] = None
                             # スコア倍率の変更
                             score.value += bomb.score_value
+                            bird.change_img(6, screen)  # 練習３：喜びを表示(爆破したときのみ)
 
-                        bird.change_img(6, screen)  # 練習３：喜びを表示
                         pg.display.update()
                         break
 
         # 練習５：爆弾リストを更新
         bombs = [bomb for bomb in bombs if bomb is not None]
 
-        # 5個倒したらレベルアップ
-        phase = min(score.value // 5 + 1, 5)
         # もし爆弾が0個なら、新たに5つ補充
         if len(bombs) == 0:
-            phase = min(phase + 1, 5)  # 最大フェーズ5まで
-            bombs = [Bomb(phase=phase) for _ in range(5)]
+            phase += 1
+            if phase >= 6: #フェーズ６以降は開発中
+                bombs = []
+            else: # フェーズ1~5
+                bombs = [Bomb(phase=phase) for _ in range(5)]
 
         # 追加機能2：ビームリストの更新
         beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]
