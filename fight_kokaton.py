@@ -110,19 +110,38 @@ class Beam:
             screen.blit(self.img, self.rct)    
 
 
+# 追加機能5：
 class Bomb:
     """
     爆弾に関するクラス
     """
-    def __init__(self, color: tuple[int, int, int], rad: int):
+    def __init__(self, phase: int):
         """
-        引数に基づき爆弾円Surfaceを生成する
-        引数1 color：爆弾円の色タプル
-        引数2 rad：爆弾円の半径
+        phaseに基づき異なる爆弾の円をSurfaceを生成する
+        引数 phase：爆弾の難易度(1~5)
         """
+        # 色、点数、フェーズを同じ値を用いてあげる
+        self.hp = phase
+        self.score_value = phase
+        self.phase = phase
+        # 半径、色の変更
+        rad = 10 + (phase - 1) * 2
+        r = max(255 - (phase -1) * 40, 100)
+        g = 0
+        b = min((phase - 1) * 40, 255)
+        color = (r, g, b)
+
         self.img = pg.Surface((2*rad, 2*rad))
         pg.draw.circle(self.img, color, (rad, rad), rad)
         self.img.set_colorkey((0, 0, 0))
+
+        # ダメージを受けたら、白くする
+        self.damage_img = pg.Surface((2*rad, 2*rad), pg.SRCALPHA) # SRCALPHAで四隅を透明に
+        pg.draw.circle(self.damage_img, (255, 255,255), (rad, rad), rad)
+
+        # ダメージ用のカウンター
+        self.damage_img_f = 0
+
         self.rct = self.img.get_rect()
         self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
         self.vx, self.vy = +5, +5
@@ -139,6 +158,14 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+
+        # 追加機能5：ダメージエフェクトを描写の切り替え
+        c_img = self.img
+        if self.damage_img_f > 0:
+            c_img = self.damage_img
+            self.damage_img_f -= 1
+                
+        screen.blit(c_img, self.rct)
 
 # 追加機能１
 class Score:
@@ -199,7 +226,7 @@ def main():
     bird = Bird((300, 200))
     
     # 練習５：複数の爆弾をリストで作成
-    bombs = [Bomb((255, 0, 0), 10) for _ in range(5)]
+    bombs = [Bomb(phase = 1) for _ in range(5)]
     # 追加機能1：スコア用
     score = Score()
     # 追加機能2：マルチビーム管理用リスト
@@ -222,22 +249,38 @@ def main():
             for beam in beams:
                 if beam is not None and bomb is not None:
                     if beam.rct.colliderect(bomb.rct):
-                        beam = None
-                        # 追加機能3：爆発を描写
-                        exps.append(Explosion(bomb))
-                        # 当たった爆弾をNoneにして無効化
+                        if beam in beams: # 衝突したらビームを消す
+                            beams.remove(beam)
+                        #　追加機能5：爆弾の体力
+                        bomb.hp -= 1
+                        bomb.damage_img_f = 10
 
-                        # 同時ヒット時対策(複数被弾無効化)
-                        if bomb in bombs:
-                            idx = bombs.index(bomb)
-                            bombs[idx] = None
+                        if bomb.hp <= 0: #HPが０の時
+                            # 追加機能3：爆発を描写
+                            exps.append(Explosion(bomb))
+                            # 当たった爆弾をNoneにして無効化
+
+                            # 同時ヒット時対策(複数被弾無効化)
+                            if bomb in bombs:
+                                idx = bombs.index(bomb)
+                                bombs[idx] = None
+                            # スコア倍率の変更
+                            score.value += bomb.score_value
 
                         bird.change_img(6, screen)  # 練習３：喜びを表示
-                        score.value += 1
                         pg.display.update()
+                        break
 
         # 練習５：爆弾リストを更新
         bombs = [bomb for bomb in bombs if bomb is not None]
+
+        # 5個倒したらレベルアップ
+        phase = min(score.value // 5 + 1, 5)
+        # もし爆弾が0個なら、新たに5つ補充
+        if len(bombs) == 0:
+            phase = min(phase + 1, 5)  # 最大フェーズ5まで
+            bombs = [Bomb(phase=phase) for _ in range(5)]
+
         # 追加機能2：ビームリストの更新
         beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]
 
