@@ -176,7 +176,8 @@ def main():
     bombs = [Bomb((255, 0, 0), 10) for _ in range(5)]
     # 追加機能1：スコア用
     score = Score()
-    beam = None  # ゲーム初期化時にはビームは存在しない
+    # 追加機能2：マルチビーム管理用リスト
+    beams = []
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -185,23 +186,26 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird)) # 追加機能2：beamをどんどん増やせるように処理            
         screen.blit(bg_img, [0, 0])
 
         # 練習２・５：爆弾とビームの衝突判定
         for bomb in bombs:
-            if beam is not None and bomb is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    beam = None
-                    # 当たった爆弾をNoneにして無効化
-                    idx = bombs.index(bomb)
-                    bombs[idx] = None
-                    bird.change_img(6, screen)  # 練習３：喜びを表示
-                    score.value += 1
-                    pg.display.update()
+            for beam in beams:
+                if beam is not None and bomb is not None:
+                    if beam.rct.colliderect(bomb.rct):
+                        beam = None
+                        # 当たった爆弾をNoneにして無効化
+                        idx = bombs.index(bomb)
+                        bombs[idx] = None
+                        bird.change_img(6, screen)  # 練習３：喜びを表示
+                        score.value += 1
+                        pg.display.update()
 
         # 練習５：爆弾リストを更新
         bombs = [bomb for bomb in bombs if bomb is not None]
+        # 追加機能2：ビームリストの更新
+        beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]
 
         # 練習４・５：こうかとんと爆弾の衝突判定
         for bomb in bombs:
@@ -219,7 +223,7 @@ def main():
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         
-        if beam is not None:  # 練習１：beamの更新
+        for beam in beams:  # 追加機能2：ビームを更新・描画
             beam.update(screen)     
             
         # 練習５：爆弾を更新・描画
