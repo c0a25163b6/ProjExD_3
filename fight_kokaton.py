@@ -140,6 +140,31 @@ class Bomb:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
+# 追加機能１
+class Score:
+    """
+    スコアを表示するクラス
+    """
+    def __init__(self):
+        """
+        スコア表示の設定をする
+        引数：なし
+        """
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)  # 青色
+        self.value = 0
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT - 50  # 画面左下付近
+
+    def update(self, screen: pg.Surface):
+        """
+        現在のスコアを左下に表示する
+        引数：screen:：ゲーム画面
+        """
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -149,7 +174,8 @@ def main():
     
     # 練習５：複数の爆弾をリストで作成
     bombs = [Bomb((255, 0, 0), 10) for _ in range(5)]
-    
+    # 追加機能1：スコア用
+    score = Score()
     beam = None  # ゲーム初期化時にはビームは存在しない
     clock = pg.time.Clock()
     tmr = 0
@@ -171,6 +197,7 @@ def main():
                     idx = bombs.index(bomb)
                     bombs[idx] = None
                     bird.change_img(6, screen)  # 練習３：喜びを表示
+                    score.value += 1
                     pg.display.update()
 
         # 練習５：爆弾リストを更新
@@ -198,7 +225,9 @@ def main():
         # 練習５：爆弾を更新・描画
         for bomb in bombs:
             bomb.update(screen)
-            
+
+        # 追加機能1：スコア表示
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
