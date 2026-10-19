@@ -165,6 +165,32 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+# 追加機能3：
+class Explosion:
+    """
+    爆発を描写するクラス
+    """
+    def __init__(self, bomb: Bomb):
+            """
+            爆発の画像を生成する
+            引数：bomb：爆発したbomb
+            """
+            img = pg.image.load("fig/explosion.gif")
+            f_img = pg.transform.flip(img, True, True)
+            self.imgs = [img, f_img]
+            self.image = self.imgs[0]
+            self.rect = self.image.get_rect()
+            self.rect.center = bomb.rct.center  # 画面左下付近
+            self.life = 10
+    def update(self, screen: pg.Surface):
+        """
+        爆発のフレームを減少させ、画像を切り替え描写
+        引数：screen:：ゲーム画面
+        """
+        if self.life > 0:
+            self.life -= 1
+            self.image = self.imgs[self.life // 5 % 2]
+            screen.blit(self.image, self.rect)
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -178,6 +204,8 @@ def main():
     score = Score()
     # 追加機能2：マルチビーム管理用リスト
     beams = []
+    # 追加機能3：爆発用のリスト
+    exps = []
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -195,9 +223,15 @@ def main():
                 if beam is not None and bomb is not None:
                     if beam.rct.colliderect(bomb.rct):
                         beam = None
+                        # 追加機能3：爆発を描写
+                        exps.append(Explosion(bomb))
                         # 当たった爆弾をNoneにして無効化
-                        idx = bombs.index(bomb)
-                        bombs[idx] = None
+
+                        # 同時ヒット時対策(複数被弾無効化)
+                        if bomb in bombs:
+                            idx = bombs.index(bomb)
+                            bombs[idx] = None
+
                         bird.change_img(6, screen)  # 練習３：喜びを表示
                         score.value += 1
                         pg.display.update()
@@ -224,8 +258,13 @@ def main():
         bird.update(key_lst, screen)
         
         for beam in beams:  # 追加機能2：ビームを更新・描画
-            beam.update(screen)     
-            
+            beam.update(screen) 
+
+        # 追加機能3：爆発リストの更新・描写
+        for exp in exps:
+            exp.update(screen)    
+        exps = [exp for exp in exps if exp.life > 0]
+        
         # 練習５：爆弾を更新・描画
         for bomb in bombs:
             bomb.update(screen)
