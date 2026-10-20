@@ -240,7 +240,7 @@ class Energy:
         """
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)  # 青色
-        self.value = "EEEEE"
+        self.value = "EEEEE" # コメントありがとうございます！こちらエネルギーのゲージとなっております（L287でどのように扱うか処理で見てみてください！）
         
         self.image = self.font.render(f"Energy: {self.value}", 0, self.color)
         self.rct = self.image.get_rect()
