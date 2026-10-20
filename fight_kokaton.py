@@ -63,7 +63,7 @@ class Bird:
         引数2 screen：画面Surface
         """
         self.img = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 0.9)
-        screen.blit(self.img, self.rct)
+        # screen.blit(self.img, self.rct) ⇒ コメントアウトしておきました！ありがとうございました！
 
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
