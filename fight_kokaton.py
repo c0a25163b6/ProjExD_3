@@ -181,8 +181,8 @@ class Score:
         self.color = (0, 0, 255)  # 青色
         self.value = 0
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
-        self.rect = self.image.get_rect()
-        self.rect.center = 100, HEIGHT - 50  # 画面左下付近
+        self.rct = self.image.get_rect()
+        self.rct.center = 100, HEIGHT - 50  # 画面左下付近
 
     def update(self, screen: pg.Surface):
         """
@@ -190,7 +190,7 @@ class Score:
         引数：screen:：ゲーム画面
         """
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rct)
 
 # 追加機能3：
 class Explosion:
@@ -206,8 +206,8 @@ class Explosion:
             f_img = pg.transform.flip(img, True, True)
             self.imgs = [img, f_img]
             self.image = self.imgs[0]
-            self.rect = self.image.get_rect()
-            self.rect.center = bomb.rct.center  # 画面左下付近
+            self.rct = self.image.get_rect()
+            self.rct.center = bomb.rct.center  # 画面左下付近
             self.life = 10
     def update(self, screen: pg.Surface):
         """
@@ -217,7 +217,33 @@ class Explosion:
         if self.life > 0:
             self.life -= 1
             self.image = self.imgs[self.life // 5 % 2]
-            screen.blit(self.image, self.rect)
+            screen.blit(self.image, self.rct)
+
+#追加機能5：
+class Energy:
+    """
+    ビームの回数を可視化する
+    """
+    def __init__(self):
+        """
+        エネルギーの表示の設定をする
+        引数：なし
+        """
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)  # 青色
+        self.value = "EEEEE"
+        
+        self.image = self.font.render(f"Energy: {self.value}", 0, self.color)
+        self.rct = self.image.get_rect()
+        self.rct.center = WIDTH - 150 , 50  # 画面左下付近
+    def update(self, screen: pg.Surface):
+        """
+        現在のエネルギーを右上に表示する
+        引数：screen:：ゲーム画面
+        """
+        self.image = self.font.render(f"Energy: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rct)
+       
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -233,8 +259,10 @@ def main():
     beams = []
     # 追加機能3：爆発用のリスト
     exps = []
-    # 追加機能5：フェーズ
+    # 追加機能4：フェーズ
     phase = 1
+    # 追加機能5：エネルギー用
+    eng = Energy()
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -243,7 +271,11 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beams.append(Beam(bird)) # 追加機能2：beamをどんどん増やせるように処理            
+                if len(beams) < 5:
+                    beams.append(Beam(bird)) # 追加機能2：beamをどんどん増やせるように処理    
+                    # 追加機能5：
+                    eng.value = "E" * len(beams) + "X" * (5 - len(beams))
+
         screen.blit(bg_img, [0, 0])
 
         # 練習２・５：爆弾とビームの衝突判定
@@ -267,11 +299,13 @@ def main():
                                 idx = bombs.index(bomb)
                                 bombs[idx] = None
                             # スコア倍率の変更
-                            score.value += bomb.score_value
+                            score.value += bomb.score_value  
                             bird.change_img(6, screen)  # 練習３：喜びを表示(爆破したときのみ)
 
                         pg.display.update()
                         break
+            # 追加機能5：ビームが消滅次第エ年るぎーを復活させる
+            eng.value = "X" * len(beams) + "E" * (5 - len(beams))
 
         # 練習５：爆弾リストを更新
         bombs = [bomb for bomb in bombs if bomb is not None]
@@ -317,6 +351,7 @@ def main():
 
         # 追加機能1：スコア表示
         score.update(screen)
+        eng.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
