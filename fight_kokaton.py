@@ -97,8 +97,14 @@ class Beam:
         self.img = pg.image.load(f"fig/beam.png")
         self.rct = self.img.get_rect()
         self.rct.centery = bird.rct.centery
-        self.rct.left = bird.rct.right
-        self.vx, self.vy = +5, 0
+        self.rct.left = bird.rct.right  
+        # 追加機能5.1 弾チェンジ
+        self.keys = pg.key.get_pressed()
+        self.v = [(+10, 0), (+0.1, 0)]
+        if self.keys[pg.K_x]: # 設置型用
+            self.vx, self.vy = self.v[1]
+        else: #連射用
+            self.vx, self.vy = self.v[0]
 
     def update(self, screen: pg.Surface):
         """
@@ -143,7 +149,7 @@ class Bomb:
         self.damage_img_f = 0
 
         self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
+        self.rct.center = random.randint(30, WIDTH), random.randint(30, HEIGHT)
         self.vx, self.vy = +5, +5
 
     def update(self, screen: pg.Surface):
@@ -166,6 +172,7 @@ class Bomb:
             self.damage_img_f -= 1
                 
         screen.blit(c_img, self.rct)
+
 
 # 追加機能１
 class Score:
@@ -191,6 +198,7 @@ class Score:
         """
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rct)
+
 
 # 追加機能3：
 class Explosion:
@@ -218,6 +226,7 @@ class Explosion:
             self.life -= 1
             self.image = self.imgs[self.life // 5 % 2]
             screen.blit(self.image, self.rct)
+
 
 #追加機能5：
 class Energy:
@@ -256,7 +265,7 @@ def main():
     # 追加機能1：スコア用
     score = Score()
     # 追加機能2：マルチビーム管理用リスト
-    beams = []
+    beams = ()
     # 追加機能3：爆発用のリスト
     exps = []
     # 追加機能4：フェーズ
@@ -269,6 +278,7 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
                 if len(beams) < 5:
